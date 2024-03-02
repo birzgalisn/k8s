@@ -2,8 +2,8 @@
 
 export DEBIAN_FRONTEND=noninteractive
 
-# Update and upgrade the system
-sudo apt update && sudo apt upgrade -y
+# Update the system
+sudo apt update
 
 # Install Docker
 sudo apt install -y docker.io
