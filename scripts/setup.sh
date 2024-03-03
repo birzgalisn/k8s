@@ -75,7 +75,7 @@ curl -fsSL "https://github.com/containernetworking/plugins/releases/download/v$C
 mkdir -p /etc/containerd
 containerd config default > /etc/containerd/config.toml
 sed -i -e "s/SystemdCgroup = false/SystemdCgroup = true/g" /etc/containerd/config.toml
-sed -i -e "s/registry.k8s.io/pause:3.8/registry.k8s.io/pause:3.9/g" /etc/containerd/config.toml
+sed -i -e "s|registry.k8s.io/pause:3.8|registry.k8s.io/pause:3.9|g" /etc/containerd/config.toml
 
 systemctl restart containerd
 
