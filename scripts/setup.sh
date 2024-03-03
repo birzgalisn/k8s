@@ -75,6 +75,8 @@ curl -fsSL "https://github.com/containernetworking/plugins/releases/download/v$C
 mkdir -p /etc/containerd
 containerd config default > /etc/containerd/config.toml
 sed -i -e "s/SystemdCgroup = false/SystemdCgroup = true/g" /etc/containerd/config.toml
+sed -i -e 's|registry.k8s.io/pause:[0-9]*\.[0-9]*|registry.k8s.io/pause:3.9|g' /etc/containerd/config.toml
+
 systemctl restart containerd
 
 # Install kubernetes
@@ -85,3 +87,4 @@ echo "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.
 apt update
 apt install -y kubelet kubeadm kubectl
 apt-mark hold kubelet kubeadm kubectl
+systemctl enable --now kubelet
