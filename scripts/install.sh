@@ -1,5 +1,7 @@
 #!/bin/sh
 
+set -e  # Exit on error
+
 export DEBIAN_FRONTEND="noninteractive"
 export DPKG_LOCK_TIMEOUT="-1"
 
@@ -29,7 +31,7 @@ sudo sysctl --system
 # Configure Containerd
 sudo test -d /etc/containerd || sudo mkdir -p /etc/containerd
 sudo test -e /etc/containerd/config.toml || sudo cat > /etc/containerd/config.toml <<EOF
-disabled_plugins = ["cri"]
+disabled_plugins = []
 
 [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.runc]
   [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.runc.options]
