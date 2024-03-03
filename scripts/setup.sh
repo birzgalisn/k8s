@@ -44,6 +44,7 @@ EOF
 sysctl --system
 
 # Configure kubelet
+mkdir -p /etc/systemd/system/kubelet.service.d
 cat <<EOF | tee /etc/systemd/system/kubelet.service.d/20-hcloud.conf
 [Service]
 Environment="KUBELET_EXTRA_ARGS=--cloud-provider=external"
