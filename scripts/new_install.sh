@@ -58,21 +58,21 @@ Environment="KUBELET_EXTRA_ARGS=--cloud-provider=external"
 EOF
 
 # Update the system
-sudo apt-get -o DPkg::Lock::Timeout=$$DPKG_LOCK_TIMEOUT update
+sudo apt-get -o DPkg::Lock::Timeout=$DPKG_LOCK_TIMEOUT update
 
 # Install required packages
-sudo apt-get -o \
-  DPkg::Lock::Timeout=$$DPKG_LOCK_TIMEOUT \
-  DPkg::Options::="--force-confnew" \
+sudo apt-get \
+  -o DPkg::Lock::Timeout=$DPKG_LOCK_TIMEOUT \
+  -o DPkg::Options::="--force-confnew" \
   install -y apt-transport-https ca-certificates curl gnupg
 
 # Remove unofficial Docker packages
 for pkg in docker.io docker-doc docker-compose docker-compose-v2 podman-docker containerd runc; do \
-  sudo apt-get -o DPkg::Lock::Timeout=$$DPKG_LOCK_TIMEOUT remove $pkg; \
+  sudo apt-get -o DPkg::Lock::Timeout=$DPKG_LOCK_TIMEOUT remove $pkg; \
 done
 
 # Add Docker's official GPG key
-sudo apt-get -o DPkg::Lock::Timeout=$$DPKG_LOCK_TIMEOUT update
+sudo apt-get -o DPkg::Lock::Timeout=$DPKG_LOCK_TIMEOUT update
 sudo install -m 0755 -d /etc/apt/keyrings
 sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
 sudo chmod a+r /etc/apt/keyrings/docker.asc
@@ -82,12 +82,12 @@ echo \
   "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu \
   $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
   sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
-sudo apt-get -o DPkg::Lock::Timeout=$$DPKG_LOCK_TIMEOUT update
+sudo apt-get -o DPkg::Lock::Timeout=$DPKG_LOCK_TIMEOUT update
 
 # Install Docker
-sudo apt-get -o \
-  DPkg::Lock::Timeout=$$DPKG_LOCK_TIMEOUT \
-  DPkg::Options::="--force-confnew" \
+sudo apt-get \
+  -o DPkg::Lock::Timeout=$DPKG_LOCK_TIMEOUT \
+  -o DPkg::Options::="--force-confnew" \
   install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 
 # Prepare Docker
@@ -107,12 +107,12 @@ sudo chmod a+r /etc/apt/keyrings/googlecloud.asc
 echo \
   "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/googlecloud.asc] https://apt.kubernetes.io kubernetes-xenial main" | \
   sudo tee /etc/apt/sources.list.d/kubernetes.list > /dev/null
-sudo apt-get -o DPkg::Lock::Timeout=$$DPKG_LOCK_TIMEOUT update
+sudo apt-get -o DPkg::Lock::Timeout=$DPKG_LOCK_TIMEOUT update
 
 # Install Kubernetes
-sudo apt-get -o \
-  DPkg::Lock::Timeout=$$DPKG_LOCK_TIMEOUT \
-  DPkg::Options::="--force-confnew" \
+sudo apt-get \
+  -o DPkg::Lock::Timeout=$DPKG_LOCK_TIMEOUT \
+  -o DPkg::Options::="--force-confnew" \
   install -y kubeadm kubelet kubectl
 
 # Hold Kubernetes packages to prevent automatic updates
