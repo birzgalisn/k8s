@@ -62,6 +62,7 @@ sudo apt update
 # Install required packages
 sudo apt install -y apt-transport-https ca-certificates curl gnupg
 
+read -p "Remove unofficial Docker packages"
 # Remove unofficial Docker packages
 for pkg in docker.io docker-doc docker-compose docker-compose-v2 podman-docker containerd runc; do sudo apt-get remove $pkg; done
 
@@ -79,6 +80,7 @@ echo \
   sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
 sudo apt update
 
+read -p "Install Docker"
 # Install Docker
 sudo apt install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 
@@ -101,6 +103,7 @@ echo \
   sudo tee /etc/apt/sources.list.d/kubernetes.list > /dev/null
 sudo apt update
 
+read -p "Install Kubernetes"
 # Install Kubernetes
 sudo apt install -y kubeadm kubelet kubectl
 
