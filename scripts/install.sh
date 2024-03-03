@@ -29,14 +29,14 @@ EOF
 sudo sysctl --system
 
 # Configure Containerd
-sudo test -d /etc/containerd || sudo mkdir -p /etc/containerd
-sudo test -e /etc/containerd/config.toml || sudo cat > /etc/containerd/config.toml <<EOF
-disabled_plugins = []
+# sudo test -d /etc/containerd || sudo mkdir -p /etc/containerd
+# sudo test -e /etc/containerd/config.toml || sudo cat > /etc/containerd/config.toml <<EOF
+# disabled_plugins = []
 
-[plugins."io.containerd.grpc.v1.cri".containerd.runtimes.runc]
-  [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.runc.options]
-    SystemdCgroup = true
-EOF
+# [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.runc]
+#   [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.runc.options]
+#     SystemdCgroup = true
+# EOF
 
 # Configure Docker daemon
 sudo test -d /etc/docker || sudo mkdir -p /etc/docker
@@ -116,6 +116,13 @@ sudo apt-get \
 
 # Hold Kubernetes packages to prevent automatic updates
 sudo apt-mark hold kubeadm kubelet kubectl
+
+# Configure Containerd
+sudo test -d /etc/containerd || sudo mkdir -p /etc/containerd
+containerd config default | sudo tee /etc/containerd/config.toml
+sed -i -e "s/SystemdCgroup = false/SystemdCgroup = true/g" /etc/containerd/config.toml
+systemctl restart containerd
+systemctl restart kubelet
 
 # Prepare Kubelet
 sudo systemctl enable --now kubelet
