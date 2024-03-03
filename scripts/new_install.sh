@@ -1,7 +1,7 @@
 #!/bin/sh
 
 export DEBIAN_FRONTEND="noninteractive"
-export $DPKG_LOCK_TIMEOUT="-1"
+export DPKG_LOCK_TIMEOUT="-1"
 
 # Disable UFW
 sudo systemctl stop ufw.service
