@@ -25,12 +25,6 @@ EOF
 
 sudo sysctl --system
 
-# Update the system
-sudo apt update
-
-# Install required packages
-sudo apt install -y apt-transport-https ca-certificates curl gnupg
-
 # Configure Containerd
 sudo test -d /etc/containerd || sudo mkdir -p /etc/containerd
 sudo test -e /etc/containerd/config.toml || sudo cat > /etc/containerd/config.toml <<EOF
@@ -54,6 +48,19 @@ cat > /etc/docker/daemon.json << EOF
   "storage-driver": "overlay2"
 }
 EOF
+
+# Configure Kubelet
+test -d /etc/systemd/system/kubelet.service.d || sudo mkdir -p /etc/systemd/system/kubelet.service.d
+test -e /etc/systemd/system/kubelet.service.d/20-hcloud.conf || sudo cat > /etc/systemd/system/kubelet.service.d/20-hcloud.conf <<EOF
+[Service]
+Environment="KUBELET_EXTRA_ARGS=--cloud-provider=external"
+EOF
+
+# Update the system
+sudo apt update
+
+# Install required packages
+sudo apt install -y apt-transport-https ca-certificates curl gnupg
 
 # Remove unofficial Docker packages
 for pkg in docker.io docker-doc docker-compose docker-compose-v2 podman-docker containerd runc; do sudo apt-get remove $pkg; done
@@ -83,13 +90,6 @@ sudo systemctl restart docker
 # Disable swap
 sudo swapoff -a
 sudo sed -i "/ swap / s/^\(.*\)$/#\1/g" /etc/fstab
-
-# Configure Kubelet
-test -d /etc/systemd/system/kubelet.service.d || sudo mkdir -p /etc/systemd/system/kubelet.service.d
-test -e /etc/systemd/system/kubelet.service.d/20-hcloud.conf || sudo cat > /etc/systemd/system/kubelet.service.d/20-hcloud.conf <<EOF
-[Service]
-Environment="KUBELET_EXTRA_ARGS=--cloud-provider=external"
-EOF
 
 # Add Google Cloud's official GPG key
 sudo curl -fsSL https://packages.cloud.google.com/apt/doc/apt-key.gpg -o /etc/apt/keyrings/googlecloud.asc
