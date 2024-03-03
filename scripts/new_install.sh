@@ -1,6 +1,7 @@
 #!/bin/sh
 
 export DEBIAN_FRONTEND="noninteractive"
+export $DPKG_LOCK_TIMEOUT="-1"
 
 # Disable UFW
 sudo systemctl stop ufw.service
@@ -8,7 +9,7 @@ sudo systemctl disable ufw.service
 sudo iptables -F
 
 # Load kernel modules required by Kubernetes
-test -e /etc/modules-load.d/k8s.conf || cat <<EOF | sudo tee /etc/modules-load.d/k8s.conf
+sudo test -e /etc/modules-load.d/k8s.conf || sudo cat <<EOF | sudo tee /etc/modules-load.d/k8s.conf
 overlay
 br_netfilter
 EOF
@@ -17,10 +18,10 @@ sudo modprobe overlay
 sudo modprobe br_netfilter
 
 # Configure sysctl settings for Kubernetes networking
-test -e /etc/sysctl.d/k8s.conf || cat <<EOF | sudo tee /etc/sysctl.d/k8s.conf
+sudo test -e /etc/sysctl.d/k8s.conf || sudo cat <<EOF | sudo tee /etc/sysctl.d/k8s.conf
 net.bridge.bridge-nf-call-ip6tables = 1
-net.bridge.bridge-nf-call-iptables = 1
-net.ipv4.ip_forward = 1
+net.bridge.bridge-nf-call-iptables  = 1
+net.ipv4.ip_forward                 = 1
 EOF
 
 sudo sysctl --system
@@ -37,7 +38,7 @@ disabled_plugins = ["cri"]
 EOF
 
 # Configure Docker daemon
-test -d /etc/docker || sudo mkdir -p /etc/docker
+sudo test -d /etc/docker || sudo mkdir -p /etc/docker
 cat > /etc/docker/daemon.json << EOF
 {
   "exec-opts": ["native.cgroupdriver=systemd"],
@@ -50,25 +51,28 @@ cat > /etc/docker/daemon.json << EOF
 EOF
 
 # Configure Kubelet
-test -d /etc/systemd/system/kubelet.service.d || sudo mkdir -p /etc/systemd/system/kubelet.service.d
-test -e /etc/systemd/system/kubelet.service.d/20-hcloud.conf || sudo cat > /etc/systemd/system/kubelet.service.d/20-hcloud.conf <<EOF
+sudo test -d /etc/systemd/system/kubelet.service.d || sudo mkdir -p /etc/systemd/system/kubelet.service.d
+sudo test -e /etc/systemd/system/kubelet.service.d/20-hcloud.conf || sudo cat > /etc/systemd/system/kubelet.service.d/20-hcloud.conf <<EOF
 [Service]
 Environment="KUBELET_EXTRA_ARGS=--cloud-provider=external"
 EOF
 
 # Update the system
-sudo apt update
+sudo apt-get -o DPkg::Lock::Timeout=$$DPKG_LOCK_TIMEOUT update
 
 # Install required packages
-sudo apt install -y apt-transport-https ca-certificates curl gnupg
+sudo apt-get -o \
+  DPkg::Lock::Timeout=$$DPKG_LOCK_TIMEOUT \
+  DPkg::Options::="--force-confnew" \
+  install -y apt-transport-https ca-certificates curl gnupg
 
-read -p "Remove unofficial Docker packages"
 # Remove unofficial Docker packages
-for pkg in docker.io docker-doc docker-compose docker-compose-v2 podman-docker containerd runc; do sudo apt-get remove $pkg; done
+for pkg in docker.io docker-doc docker-compose docker-compose-v2 podman-docker containerd runc; do \
+  sudo apt-get -o DPkg::Lock::Timeout=$$DPKG_LOCK_TIMEOUT remove $pkg; \
+done
 
 # Add Docker's official GPG key
-sudo apt update
-sudo apt install ca-certificates curl
+sudo apt-get -o DPkg::Lock::Timeout=$$DPKG_LOCK_TIMEOUT update
 sudo install -m 0755 -d /etc/apt/keyrings
 sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
 sudo chmod a+r /etc/apt/keyrings/docker.asc
@@ -78,11 +82,13 @@ echo \
   "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu \
   $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
   sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
-sudo apt update
+sudo apt-get -o DPkg::Lock::Timeout=$$DPKG_LOCK_TIMEOUT update
 
-read -p "Install Docker"
 # Install Docker
-sudo apt install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+sudo apt-get -o \
+  DPkg::Lock::Timeout=$$DPKG_LOCK_TIMEOUT \
+  DPkg::Options::="--force-confnew" \
+  install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 
 # Prepare Docker
 sudo systemctl enable docker
@@ -101,16 +107,16 @@ sudo chmod a+r /etc/apt/keyrings/googlecloud.asc
 echo \
   "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/googlecloud.asc] https://apt.kubernetes.io kubernetes-xenial main" | \
   sudo tee /etc/apt/sources.list.d/kubernetes.list > /dev/null
-sudo apt update
+sudo apt-get -o DPkg::Lock::Timeout=$$DPKG_LOCK_TIMEOUT update
 
-read -p "Install Kubernetes"
 # Install Kubernetes
-sudo apt install -y kubeadm kubelet kubectl
+sudo apt-get -o \
+  DPkg::Lock::Timeout=$$DPKG_LOCK_TIMEOUT \
+  DPkg::Options::="--force-confnew" \
+  install -y kubeadm kubelet kubectl
 
 # Hold Kubernetes packages to prevent automatic updates
 sudo apt-mark hold kubeadm kubelet kubectl
 
-# Prepare Kubernetes
-sudo systemctl enable kubelet
-sudo systemctl daemon-reload
-sudo systemctl restart kubelet
+# Prepare Kubelet
+sudo systemctl enable --now kubelet
